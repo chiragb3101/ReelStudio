@@ -1,0 +1,219 @@
+"use client";
+
+import { useCallback, useMemo } from "react";
+import { ListVideo, Camera, Clock, Clapperboard, FileText, Hash } from "lucide-react";
+import { StageWrapper } from "@/components/shared/stage-wrapper";
+import { JsonStreamingIndicator } from "@/components/shared/json-streaming-indicator";
+import { RegenerateButton } from "@/components/shared/regenerate-button";
+import { CopyButton } from "@/components/shared/copy-button";
+import { ApiKeyInput, useApiKey } from "@/components/shared/api-key-input";
+import { useAiStream } from "@/hooks/use-ai-stream";
+import { usePipeline } from "@/hooks/use-pipeline";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import type { ShotItem } from "@/lib/types";
+
+function parseShotList(text: string) {
+  try {
+    const jsonMatch =
+      text.match(/```json\s*([\s\S]*?)```/) || text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    const json = jsonMatch[1] || jsonMatch[0];
+    const parsed = JSON.parse(json);
+    if (parsed.shots && Array.isArray(parsed.shots)) {
+      // Ensure duration is numeric
+      for (const shot of parsed.shots) {
+        if (typeof shot.duration === "string") {
+          const num = parseFloat(shot.duration);
+          shot.duration = isNaN(num) ? 4 : num;
+        }
+      }
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export default function ShotListPage() {
+  const { state, dispatch } = usePipeline();
+  const { apiKey, saveKey } = useApiKey();
+
+  const onComplete = useCallback(
+    (rawText: string) => {
+      const parsed = parseShotList(rawText);
+      if (parsed) {
+        dispatch({ type: "SET_SHOT_LIST", data: { shots: parsed.shots } });
+      }
+    },
+    [dispatch]
+  );
+
+  const streamOptions = useMemo(() => ({ onComplete }), [onComplete]);
+  const { text, isStreaming, error, generate } = useAiStream(streamOptions);
+
+  const parsedLive = text ? parseShotList(text) : null;
+  const shots = parsedLive?.shots || state.shotList?.shots;
+
+  const showCards = !!shots && !isStreaming;
+  const showStreaming = isStreaming;
+  const showEmpty = !shots && !isStreaming && !text;
+
+  function handleGenerate() {
+    if (!state.idea || !state.script || !apiKey) return;
+    generate("/api/ai/shot-list", {
+      topic: state.idea.topic,
+      script: {
+        hook: state.script.hook,
+        body: state.script.body,
+        cta: state.script.cta,
+      },
+      segments: state.script.segments ?? undefined,
+      apiKey,
+    });
+  }
+
+  const totalDuration = shots
+    ? shots.reduce((sum: number, s: ShotItem) => sum + (typeof s.duration === "number" ? s.duration : 0), 0)
+    : 0;
+
+  const copyText = shots
+    ? shots
+        .map(
+          (s: ShotItem, i: number) =>
+            `Shot ${i + 1}: ${s.description} (${s.duration}s, ${s.angle})\nScript: ${s.scriptText || "N/A"}\nNotes: ${s.notes}`
+        )
+        .join("\n\n")
+    : "";
+
+  return (
+    <StageWrapper
+      stage="shot-list"
+      nextDisabled={!state.shotList}
+      actions={
+        shots ? (
+          <div className="flex gap-2">
+            <CopyButton text={copyText} />
+            <RegenerateButton onClick={handleGenerate} isLoading={isStreaming} />
+          </div>
+        ) : undefined
+      }
+    >
+      <div className="space-y-6 max-w-3xl">
+        <ApiKeyInput apiKey={apiKey} onChange={saveKey} />
+
+        {showEmpty && (
+          <div className="glass rounded-2xl p-8 text-center space-y-4">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mx-auto">
+              <ListVideo className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">Plan your shots</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                AI will create a detailed shot-by-shot plan for your reel.
+              </p>
+            </div>
+            <Button
+              onClick={handleGenerate}
+              disabled={!apiKey || !state.script}
+              size="lg"
+              className="rounded-xl bg-primary hover:bg-primary/90"
+            >
+              Generate Shot List
+            </Button>
+          </div>
+        )}
+
+        {showStreaming && (
+          <JsonStreamingIndicator text={text} label="shot list" />
+        )}
+
+        {showCards && shots && (
+          <div className="space-y-3">
+            {/* Total duration bar */}
+            <div className="flex items-center gap-2 px-1">
+              <Badge variant="outline" className="text-xs gap-1 border-primary/30 text-primary">
+                <Clock className="w-3 h-3" />
+                {totalDuration.toFixed(1)}s total
+              </Badge>
+              <Badge variant="outline" className="text-xs gap-1 border-border/50 text-muted-foreground">
+                {shots.length} shots
+              </Badge>
+            </div>
+
+            {shots.map((shot: ShotItem, i: number) => (
+              <Card
+                key={shot.id}
+                className="glass rounded-xl p-5 border-border/50 hover:border-primary/20 transition-colors"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/20 text-primary text-xs font-bold">
+                      {i + 1}
+                    </div>
+                    <span className="font-medium">{shot.description}</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <Badge
+                    variant="outline"
+                    className="text-xs gap-1 border-border/50"
+                  >
+                    <Clock className="w-3 h-3" />
+                    {typeof shot.duration === "number" ? `${shot.duration.toFixed(1)}s` : shot.duration}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="text-xs gap-1 border-border/50"
+                  >
+                    <Camera className="w-3 h-3" />
+                    {shot.angle}
+                  </Badge>
+                  {shot.wordCount && (
+                    <Badge
+                      variant="outline"
+                      className="text-xs gap-1 border-border/50"
+                    >
+                      <Hash className="w-3 h-3" />
+                      {shot.wordCount}w
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Script text for this shot */}
+                {shot.scriptText && (
+                  <div className="mb-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <FileText className="w-3 h-3 text-primary/60" />
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-primary/60">
+                        Script
+                      </span>
+                    </div>
+                    <p className="text-sm text-foreground/80 leading-relaxed">
+                      {shot.scriptText}
+                    </p>
+                  </div>
+                )}
+
+                {shot.notes && (
+                  <p className="text-sm text-muted-foreground flex items-start gap-1.5">
+                    <Clapperboard className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                    {shot.notes}
+                  </p>
+                )}
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {error && (
+          <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive">
+            {error}
+          </div>
+        )}
+      </div>
+    </StageWrapper>
+  );
+}
