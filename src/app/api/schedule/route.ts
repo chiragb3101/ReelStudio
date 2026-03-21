@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { scheduleSchema } from "@/lib/api-schemas";
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { accessToken, profile_ids, text, scheduled_at, media } = body;
+  const { userId } = await auth();
+  if (!userId) return new Response("Unauthorized", { status: 401 });
 
-  if (!accessToken) {
-    return new Response("Missing Buffer access token", { status: 400 });
-  }
+  const body = scheduleSchema.safeParse(await req.json());
+  if (!body.success) return new Response(body.error.message, { status: 400 });
+  const { accessToken, profile_ids, text, scheduled_at, media } = body.data;
 
   try {
     const bufferBody: Record<string, unknown> = {
@@ -41,11 +43,14 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get("Authorization");
+  const { userId } = await auth();
+  if (!userId) return new Response("Unauthorized", { status: 401 });
+
+  const authHeader = req.headers.get("Authorization");
   const action = req.nextUrl.searchParams.get("action");
 
-  if (action === "profiles" && auth) {
-    const token = auth.replace("Bearer ", "");
+  if (action === "profiles" && authHeader) {
+    const token = authHeader.replace("Bearer ", "");
     try {
       const res = await fetch(
         `https://api.bufferapp.com/1/profiles.json?access_token=${token}`

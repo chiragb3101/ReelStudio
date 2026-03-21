@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { callOpenRouter } from "@/lib/openrouter";
+import { motionGraphicSchema } from "@/lib/api-schemas";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { buildMotionGraphicPrompt } from "@/lib/prompts/remotion-skills";
 import { writeFile, readFile, mkdir } from "fs/promises";
 import { exec } from "child_process";
@@ -58,10 +61,15 @@ ${raw}`;
 }
 
 export async function POST(req: NextRequest) {
-  const { script, topic, tone, durationSeconds, apiKey, chatHistory, userPrompt, template } = await req.json();
+  const { userId } = await auth();
+  if (!userId) return new Response("Unauthorized", { status: 401 });
 
-  if (!apiKey) return NextResponse.json({ error: "Missing API key" }, { status: 400 });
-  if (!script) return NextResponse.json({ error: "Missing script" }, { status: 400 });
+  const { success: rateLimitOk } = await checkRateLimit(userId);
+  if (!rateLimitOk) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+
+  const parsed = motionGraphicSchema.safeParse(await req.json());
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+  const { script, topic, tone, durationSeconds, chatHistory, userPrompt, template } = parsed.data;
 
   try {
     const duration = durationSeconds ?? 25;
@@ -103,7 +111,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Step 1: Generate TSX
-    const tsxCode = await callOpenRouter(apiKey, {
+    const tsxCode = await callOpenRouter({
       messages,
       temperature: 0.8,
       maxTokens: 16000,
@@ -138,7 +146,7 @@ export async function POST(req: NextRequest) {
           const imgRes = await fetch("https://openrouter.ai/api/v1/images/generations", {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${apiKey}`,
+              Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
               "Content-Type": "application/json",
               "HTTP-Referer": "https://reelstudio.app",
               "X-Title": "ReelStudio",

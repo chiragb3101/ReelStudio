@@ -6,7 +6,6 @@ import { StageWrapper } from "@/components/shared/stage-wrapper";
 import { JsonStreamingIndicator } from "@/components/shared/json-streaming-indicator";
 import { RegenerateButton } from "@/components/shared/regenerate-button";
 import { CopyButton } from "@/components/shared/copy-button";
-import { ApiKeyInput, useApiKey } from "@/components/shared/api-key-input";
 import { useAiStream } from "@/hooks/use-ai-stream";
 import { usePipeline } from "@/hooks/use-pipeline";
 import { Button } from "@/components/ui/button";
@@ -39,7 +38,6 @@ function parseShotList(text: string) {
 
 export default function ShotListPage() {
   const { state, dispatch } = usePipeline();
-  const { apiKey, saveKey } = useApiKey();
 
   const onComplete = useCallback(
     (rawText: string) => {
@@ -62,7 +60,7 @@ export default function ShotListPage() {
   const showEmpty = !shots && !isStreaming && !text;
 
   function handleGenerate() {
-    if (!state.idea || !state.script || !apiKey) return;
+    if (!state.idea || !state.script) return;
     generate("/api/ai/shot-list", {
       topic: state.idea.topic,
       script: {
@@ -71,7 +69,6 @@ export default function ShotListPage() {
         cta: state.script.cta,
       },
       segments: state.script.segments ?? undefined,
-      apiKey,
     });
   }
 
@@ -102,8 +99,6 @@ export default function ShotListPage() {
       }
     >
       <div className="space-y-6 max-w-3xl">
-        <ApiKeyInput apiKey={apiKey} onChange={saveKey} />
-
         {showEmpty && (
           <div className="glass rounded-2xl p-8 text-center space-y-4">
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mx-auto">
@@ -117,7 +112,7 @@ export default function ShotListPage() {
             </div>
             <Button
               onClick={handleGenerate}
-              disabled={!apiKey || !state.script}
+              disabled={!state.script}
               size="lg"
               className="rounded-xl bg-primary hover:bg-primary/90"
             >

@@ -1,20 +1,32 @@
 import { NextRequest } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { streamOpenRouter } from "@/lib/openrouter";
 import { buildEditSpecPrompt } from "@/lib/prompts/edit-spec";
+import { editSpecSchema } from "@/lib/api-schemas";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
-  const { topic, script, clips, tone, template, segments, apiKey } = await req.json();
+  const { userId } = await auth();
+  if (!userId) return new Response("Unauthorized", { status: 401 });
 
-  if (!apiKey) return new Response("Missing API key", { status: 400 });
-  if (!topic || !script) return new Response("Missing required fields", { status: 400 });
+  const { success } = await checkRateLimit(userId);
+  if (!success) return new Response("Too many requests", { status: 429 });
 
-  const prompt = buildEditSpecPrompt(topic, script, clips ?? [], tone ?? "casual", template ?? "full-video-overlay", segments);
+  const body = editSpecSchema.safeParse(await req.json());
+  if (!body.success) return new Response(body.error.message, { status: 400 });
+  const { topic, tone, template } = body.data;
+  const script = body.data.script as { hook: string; body: string; cta: string };
+  const clips = (body.data.clips ?? []) as Parameters<typeof buildEditSpecPrompt>[2];
+  const segments = body.data.segments as Parameters<typeof buildEditSpecPrompt>[5];
+  const videoTemplate = (template ?? "full-video-overlay") as Parameters<typeof buildEditSpecPrompt>[4];
+
+  const prompt = buildEditSpecPrompt(topic, script, clips, tone ?? "casual", videoTemplate, segments);
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        for await (const chunk of streamOpenRouter(apiKey, {
+        for await (const chunk of streamOpenRouter({
           messages: [
             {
               role: "system",

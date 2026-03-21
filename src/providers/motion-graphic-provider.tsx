@@ -12,7 +12,6 @@ interface GenerateOptions {
   topic: string;
   tone: string;
   durationSeconds?: number;
-  apiKey: string;
   template?: string;
 }
 
@@ -63,7 +62,6 @@ export function MotionGraphicProvider({ children }: { children: ReactNode }) {
           topic: options.topic,
           tone: options.tone,
           durationSeconds: options.durationSeconds ?? 25,
-          apiKey: options.apiKey,
           template: options.template,
           chatHistory: history,
           userPrompt,

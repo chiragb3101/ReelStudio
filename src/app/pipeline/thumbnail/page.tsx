@@ -4,7 +4,6 @@ import { useState } from "react";
 import { ImageIcon, Loader2, Check, VideoIcon } from "lucide-react";
 import { StageWrapper } from "@/components/shared/stage-wrapper";
 import { RegenerateButton } from "@/components/shared/regenerate-button";
-import { ApiKeyInput, useApiKey } from "@/components/shared/api-key-input";
 import { usePipeline } from "@/hooks/use-pipeline";
 import { getAllClips } from "@/lib/media-db";
 import { captureFramesFromClips } from "@/lib/frame-capture";
@@ -18,7 +17,6 @@ import type { ThumbnailOption } from "@/lib/types";
 
 export default function ThumbnailPage() {
   const { state, dispatch } = usePipeline();
-  const { apiKey, saveKey } = useApiKey();
   const [thumbnails, setThumbnails] = useState<ThumbnailOption[]>(
     state.thumbnail?.options ?? []
   );
@@ -33,7 +31,7 @@ export default function ThumbnailPage() {
   const hasContent = thumbnails.length > 0;
 
   async function handleGenerate() {
-    if (!state.idea || !apiKey) return;
+    if (!state.idea) return;
     setLoading(true);
     setError(null);
 
@@ -62,8 +60,7 @@ export default function ThumbnailPage() {
           topic: state.idea.topic,
           hook: state.script?.hook ?? "",
           tone: state.idea.tone,
-          apiKey,
-          frames: frames.slice(0, 3), // Send up to 3 frames
+          frames: frames.slice(0, 3),
         }),
       });
 
@@ -108,8 +105,6 @@ export default function ThumbnailPage() {
       }
     >
       <div className="space-y-6 max-w-3xl">
-        <ApiKeyInput apiKey={apiKey} onChange={saveKey} />
-
         {!hasContent && !loading && (
           <div className="glass rounded-2xl p-8 text-center space-y-4">
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mx-auto">
@@ -124,7 +119,7 @@ export default function ThumbnailPage() {
             </div>
             <Button
               onClick={handleGenerate}
-              disabled={!apiKey || !state.idea}
+              disabled={!state.idea}
               size="lg"
               className="rounded-xl bg-primary hover:bg-primary/90"
             >

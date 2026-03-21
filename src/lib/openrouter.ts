@@ -12,14 +12,19 @@ export interface OpenRouterStreamOptions {
 
 const DEFAULT_MODEL = "anthropic/claude-sonnet-4";
 
+function getApiKey(): string {
+  const key = process.env.OPENROUTER_API_KEY;
+  if (!key) throw new Error("OPENROUTER_API_KEY is not configured");
+  return key;
+}
+
 export async function* streamOpenRouter(
-  apiKey: string,
   options: OpenRouterStreamOptions
 ): AsyncGenerator<string> {
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${getApiKey()}`,
       "Content-Type": "application/json",
       "HTTP-Referer": "https://reelstudio.app",
       "X-Title": "ReelStudio",
@@ -70,13 +75,12 @@ export async function* streamOpenRouter(
 }
 
 export async function callOpenRouter(
-  apiKey: string,
   options: OpenRouterStreamOptions
 ): Promise<string> {
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${getApiKey()}`,
       "Content-Type": "application/json",
       "HTTP-Referer": "https://reelstudio.app",
       "X-Title": "ReelStudio",

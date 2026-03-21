@@ -7,7 +7,6 @@ import {
   Play, Volume2, VolumeX, Image as ImageIcon, Paperclip,
 } from "lucide-react";
 import { StageWrapper } from "@/components/shared/stage-wrapper";
-import { ApiKeyInput, useApiKey } from "@/components/shared/api-key-input";
 import { useMotionGraphic } from "@/hooks/use-motion-graphic";
 import { useMediaStore } from "@/hooks/use-media-store";
 import { StitchedVideoPlayer } from "@/components/shared/stitched-video-player";
@@ -213,7 +212,6 @@ interface TimelineClip {
 
 export default function EditPage() {
   const { state, dispatch } = usePipeline();
-  const { apiKey, saveKey } = useApiKey();
   const { clips } = useMediaStore();
   const [activeTab, setActiveTab] = useState<TabId>("user-video");
 
@@ -315,8 +313,8 @@ export default function EditPage() {
   function removeClip(i: number) { setTimeline((p) => p.filter((_, j) => j !== i)); }
 
   function handleGenMG() {
-    if (!state.script || !apiKey) return;
-    motionGraphic.generate({ script: state.script.fullText, topic: state.idea?.topic ?? "", tone: state.idea?.tone ?? "professional", durationSeconds: Math.max(Math.round(totalDur), 10), apiKey, template: state.template });
+    if (!state.script) return;
+    motionGraphic.generate({ script: state.script.fullText, topic: state.idea?.topic ?? "", tone: state.idea?.tone ?? "professional", durationSeconds: Math.max(Math.round(totalDur), 10), template: state.template });
   }
   function handleRefineMG() {
     if (!mgPrompt.trim() || motionGraphic.isGenerating) return;
@@ -419,8 +417,6 @@ export default function EditPage() {
       <div className="flex gap-6 min-h-[80vh]">
         {/* ══ LEFT: Tabs ══ */}
         <div className="flex-1 min-w-0 space-y-4">
-          <ApiKeyInput apiKey={apiKey} onChange={saveKey} />
-
           {/* Template */}
           <div className="flex items-center gap-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground shrink-0">Layout</span>
@@ -576,7 +572,7 @@ export default function EditPage() {
                   </div>
                   <h3 className="font-semibold text-lg">Generate Motion Graphic</h3>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">AI creates a full Remotion composition — shapes, particles, gradients, animated text — rendered as MP4.</p>
-                  <Button onClick={handleGenMG} disabled={!apiKey || !state.script} size="lg" className="rounded-xl bg-purple-600 hover:bg-purple-700 gap-2">
+                  <Button onClick={handleGenMG} disabled={!state.script} size="lg" className="rounded-xl bg-purple-600 hover:bg-purple-700 gap-2">
                     <Sparkles className="w-4 h-4" /> Generate from Script
                   </Button>
                 </div>

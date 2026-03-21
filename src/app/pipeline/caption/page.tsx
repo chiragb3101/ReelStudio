@@ -6,7 +6,6 @@ import { StageWrapper } from "@/components/shared/stage-wrapper";
 import { JsonStreamingIndicator } from "@/components/shared/json-streaming-indicator";
 import { RegenerateButton } from "@/components/shared/regenerate-button";
 import { CopyButton } from "@/components/shared/copy-button";
-import { ApiKeyInput, useApiKey } from "@/components/shared/api-key-input";
 import { useAiStream } from "@/hooks/use-ai-stream";
 import { usePipeline } from "@/hooks/use-pipeline";
 import { TONE_CONFIG } from "@/lib/constants";
@@ -31,7 +30,6 @@ function parseCaption(text: string) {
 
 export default function CaptionPage() {
   const { state, dispatch } = usePipeline();
-  const { apiKey, saveKey } = useApiKey();
   const [editedCaption, setEditedCaption] = useState<string | null>(null);
 
   const onComplete = useCallback(
@@ -60,7 +58,7 @@ export default function CaptionPage() {
   const displayCaption = editedCaption ?? captionData?.caption ?? "";
 
   function handleGenerate() {
-    if (!state.idea || !state.script || !apiKey) return;
+    if (!state.idea || !state.script) return;
     setEditedCaption(null);
     const toneModifier = TONE_CONFIG[state.idea.tone].promptModifier;
     generate("/api/ai/caption", {
@@ -71,7 +69,6 @@ export default function CaptionPage() {
         cta: state.script.cta,
       },
       toneModifier,
-      apiKey,
     });
   }
 
@@ -95,8 +92,6 @@ export default function CaptionPage() {
       }
     >
       <div className="space-y-6 max-w-3xl">
-        <ApiKeyInput apiKey={apiKey} onChange={saveKey} />
-
         {showEmpty && (
           <div className="glass rounded-2xl p-8 text-center space-y-4">
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mx-auto">
@@ -110,7 +105,7 @@ export default function CaptionPage() {
             </div>
             <Button
               onClick={handleGenerate}
-              disabled={!apiKey || !state.script}
+              disabled={!state.script}
               size="lg"
               className="rounded-xl bg-primary hover:bg-primary/90"
             >

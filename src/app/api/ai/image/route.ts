@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { imageSchema } from "@/lib/api-schemas";
 
 export async function POST(req: NextRequest) {
-  const { prompt, apiKey } = await req.json();
+  const { userId } = await auth();
+  if (!userId) return new Response("Unauthorized", { status: 401 });
 
-  if (!apiKey) return new Response("Missing API key", { status: 400 });
-  if (!prompt) return new Response("Missing prompt", { status: 400 });
+  const body = imageSchema.safeParse(await req.json());
+  if (!body.success) return new Response(body.error.message, { status: 400 });
+  const { prompt } = body.data;
+
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) return new Response("OpenRouter API key not configured", { status: 500 });
 
   try {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
