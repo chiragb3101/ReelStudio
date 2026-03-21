@@ -24,6 +24,7 @@
     "date-fns": "^4.1.0",
     "framer-motion": "^12.38.0",
     "idb": "^8.0.3",
+    "inngest": "^4.0.4",
     "lucide-react": "^0.577.0",
     "next": "16.2.0",
     "posthog-js": "^1.363.1",
