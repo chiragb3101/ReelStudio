@@ -4,10 +4,10 @@ const nextConfig: NextConfig = {
   transpilePackages: ["remotion", "@remotion/player", "@remotion/media-utils"],
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**",
-      },
+      { protocol: "https", hostname: "img.clerk.com" },
+      { protocol: "https", hostname: "images.clerk.dev" },
+      { protocol: "https", hostname: "*.supabase.co" },
+      { protocol: "https", hostname: "openrouter.ai" },
     ],
   },
 };

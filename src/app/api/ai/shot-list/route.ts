@@ -1,12 +1,22 @@
 import { NextRequest } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { streamOpenRouter } from "@/lib/openrouter";
 import { buildShotListPrompt } from "@/lib/prompts/shot-list";
+import { shotListSchema } from "@/lib/api-schemas";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
-  const { topic, script, segments, apiKey } = await req.json();
+  const { userId } = await auth();
+  if (!userId) return new Response("Unauthorized", { status: 401 });
 
-  if (!apiKey) return new Response("Missing API key", { status: 400 });
-  if (!topic || !script) return new Response("Missing required fields", { status: 400 });
+  const { success } = await checkRateLimit(userId);
+  if (!success) return new Response("Too many requests", { status: 429 });
+
+  const body = shotListSchema.safeParse(await req.json());
+  if (!body.success) return new Response(body.error.message, { status: 400 });
+  const { topic } = body.data;
+  const script = body.data.script as { hook: string; body: string; cta: string };
+  const segments = body.data.segments as Parameters<typeof buildShotListPrompt>[2];
 
   const prompt = buildShotListPrompt(topic, script, segments);
 
@@ -14,7 +24,7 @@ export async function POST(req: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        for await (const chunk of streamOpenRouter(apiKey, {
+        for await (const chunk of streamOpenRouter({
           messages: [
             {
               role: "system",

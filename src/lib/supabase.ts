@@ -62,29 +62,68 @@ export async function createProject(
 }
 
 export async function updateProjectStage(
+  userId: string,
   projectId: string,
   stage: string
 ): Promise<void> {
   const { error } = await supabase
     .from("projects")
     .update({ stage, updated_at: new Date().toISOString() })
-    .eq("id", projectId);
+    .eq("id", projectId)
+    .eq("user_id", userId);
 
   if (error) throw error;
 }
 
-export async function deleteProject(projectId: string): Promise<void> {
-  // Delete project data first, then the project
+export async function updateProjectTitle(
+  userId: string,
+  projectId: string,
+  title: string
+): Promise<void> {
+  const { error } = await supabase
+    .from("projects")
+    .update({ title, updated_at: new Date().toISOString() })
+    .eq("id", projectId)
+    .eq("user_id", userId);
+
+  if (error) throw error;
+}
+
+export async function deleteProject(
+  userId: string,
+  projectId: string
+): Promise<void> {
+  // Verify ownership before deleting
+  const { data } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("id", projectId)
+    .eq("user_id", userId)
+    .single();
+
+  if (!data) throw new Error("Project not found or access denied");
+
   await supabase.from("project_data").delete().eq("project_id", projectId);
   const { error } = await supabase.from("projects").delete().eq("id", projectId);
   if (error) throw error;
 }
 
 export async function saveProjectData(
+  userId: string,
   projectId: string,
   stageName: string,
   data: Record<string, unknown>
 ): Promise<void> {
+  // Verify ownership before saving
+  const { data: project } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("id", projectId)
+    .eq("user_id", userId)
+    .single();
+
+  if (!project) throw new Error("Project not found or access denied");
+
   const { error } = await supabase
     .from("project_data")
     .upsert(
@@ -96,13 +135,16 @@ export async function saveProjectData(
 }
 
 export async function loadProjectData(
+  userId: string,
   projectId: string
 ): Promise<ProjectDataRow[]> {
+  // Join with projects table to verify ownership
   const { data, error } = await supabase
     .from("project_data")
-    .select("*")
-    .eq("project_id", projectId);
+    .select("*, projects!inner(user_id)")
+    .eq("project_id", projectId)
+    .eq("projects.user_id", userId);
 
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as ProjectDataRow[];
 }

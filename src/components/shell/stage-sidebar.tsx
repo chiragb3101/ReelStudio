@@ -40,7 +40,8 @@ export function StageSidebar() {
     const status = state.stageStatuses[stage];
     if (status === "locked") return;
     dispatch({ type: "SET_STAGE", stage });
-    router.push(`/pipeline/${stage}`);
+    const base = state.projectId ? `/pipeline/${state.projectId}` : "/pipeline";
+    router.push(`${base}/${stage}`);
   }
 
   return (

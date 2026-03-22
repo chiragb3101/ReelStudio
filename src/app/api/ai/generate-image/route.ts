@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { generateImageSchema } from "@/lib/api-schemas";
 
 const SANDBOX_DIR = path.resolve(process.cwd(), "remotion-sandbox");
 const PUBLIC_DIR = path.join(SANDBOX_DIR, "public", "generated");
@@ -10,8 +12,14 @@ const PUBLIC_DIR = path.join(SANDBOX_DIR, "public", "generated");
  * Never fails — always returns a usable path.
  */
 export async function POST(req: NextRequest) {
-  const { prompt, filename, apiKey, width, height } = await req.json();
+  const { userId } = await auth();
+  if (!userId) return new Response("Unauthorized", { status: 401 });
 
+  const body = generateImageSchema.safeParse(await req.json());
+  if (!body.success) return new Response(body.error.message, { status: 400 });
+  const { prompt, filename, width, height } = body.data;
+
+  const apiKey = process.env.OPENROUTER_API_KEY;
   const w = width ?? 512;
   const h = height ?? 512;
   const safeName = (filename ?? `img-${Date.now()}.png`).replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -19,10 +27,9 @@ export async function POST(req: NextRequest) {
 
   await mkdir(PUBLIC_DIR, { recursive: true });
 
-  // Try real image generation if API key provided
+  // Try real image generation if API key and prompt available
   if (apiKey && prompt) {
     try {
-      // Try OpenRouter image generation
       const res = await fetch("https://openrouter.ai/api/v1/images/generations", {
         method: "POST",
         headers: {
@@ -45,7 +52,6 @@ export async function POST(req: NextRequest) {
 
         if (imageUrl) {
           if (imageUrl.startsWith("http")) {
-            // URL — download it
             const imgRes = await fetch(imageUrl);
             if (imgRes.ok) {
               const buffer = Buffer.from(await imgRes.arrayBuffer());
@@ -53,7 +59,6 @@ export async function POST(req: NextRequest) {
               return NextResponse.json({ path: `generated/${safeName}` });
             }
           } else {
-            // Base64 — decode and save
             const buffer = Buffer.from(imageUrl, "base64");
             await writeFile(path.join(PUBLIC_DIR, safeName), buffer);
             return NextResponse.json({ path: `generated/${safeName}` });
@@ -89,7 +94,6 @@ export async function POST(req: NextRequest) {
 }
 
 function generateGradientFromPrompt(prompt: string): [string, string, string] {
-  // Simple hash-based color generation from prompt text
   let hash = 0;
   for (const c of prompt) hash = ((hash << 5) - hash + c.charCodeAt(0)) | 0;
   const hue1 = Math.abs(hash) % 360;

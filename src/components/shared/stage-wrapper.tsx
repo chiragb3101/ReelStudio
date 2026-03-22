@@ -38,7 +38,8 @@ export function StageWrapper({
     if (onNext) onNext();
     if (nextStage) {
       dispatch({ type: "SET_STAGE", stage: nextStage });
-      router.push(`/pipeline/${nextStage}`);
+      const base = state.projectId ? `/pipeline/${state.projectId}` : "/pipeline";
+      router.push(`${base}/${nextStage}`);
     }
   }
 

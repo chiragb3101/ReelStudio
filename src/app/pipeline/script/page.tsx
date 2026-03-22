@@ -6,7 +6,6 @@ import { StageWrapper } from "@/components/shared/stage-wrapper";
 import { JsonStreamingIndicator } from "@/components/shared/json-streaming-indicator";
 import { RegenerateButton } from "@/components/shared/regenerate-button";
 import { CopyButton } from "@/components/shared/copy-button";
-import { ApiKeyInput, useApiKey } from "@/components/shared/api-key-input";
 import { useAiStream } from "@/hooks/use-ai-stream";
 import { usePipeline } from "@/hooks/use-pipeline";
 import { TONE_CONFIG } from "@/lib/constants";
@@ -30,7 +29,6 @@ function parseScript(text: string) {
 
 export default function ScriptPage() {
   const { state, dispatch } = usePipeline();
-  const { apiKey, saveKey } = useApiKey();
 
   const onComplete = useCallback(
     (rawText: string) => {
@@ -69,14 +67,13 @@ export default function ScriptPage() {
   const showEmpty = !script && !isStreaming && !text;
 
   function handleGenerate() {
-    if (!state.idea || !apiKey) return;
+    if (!state.idea) return;
     const toneModifier = TONE_CONFIG[state.idea.tone].promptModifier;
     generate("/api/ai/script", {
       topic: state.idea.topic,
       pov: state.idea.pov,
       research: state.research?.markdown ?? "",
       toneModifier,
-      apiKey,
     });
   }
 
@@ -106,8 +103,6 @@ export default function ScriptPage() {
       }
     >
       <div className="space-y-6 max-w-3xl">
-        <ApiKeyInput apiKey={apiKey} onChange={saveKey} />
-
         {showEmpty && (
           <div className="glass rounded-2xl p-8 text-center space-y-4">
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mx-auto">
@@ -121,7 +116,7 @@ export default function ScriptPage() {
             </div>
             <Button
               onClick={handleGenerate}
-              disabled={!apiKey || !state.idea}
+              disabled={!state.idea}
               size="lg"
               className="rounded-xl bg-primary hover:bg-primary/90"
             >

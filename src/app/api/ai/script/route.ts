@@ -1,12 +1,20 @@
 import { NextRequest } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { streamOpenRouter } from "@/lib/openrouter";
 import { buildScriptPrompt } from "@/lib/prompts/script";
+import { scriptSchema } from "@/lib/api-schemas";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
-  const { topic, pov, research, toneModifier, apiKey } = await req.json();
+  const { userId } = await auth();
+  if (!userId) return new Response("Unauthorized", { status: 401 });
 
-  if (!apiKey) return new Response("Missing API key", { status: 400 });
-  if (!topic) return new Response("Missing topic", { status: 400 });
+  const { success } = await checkRateLimit(userId);
+  if (!success) return new Response("Too many requests", { status: 429 });
+
+  const body = scriptSchema.safeParse(await req.json());
+  if (!body.success) return new Response(body.error.message, { status: 400 });
+  const { topic, pov, research, toneModifier } = body.data;
 
   const prompt = buildScriptPrompt(topic, pov ?? "", research ?? "", toneModifier ?? "");
 
@@ -14,7 +22,7 @@ export async function POST(req: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        for await (const chunk of streamOpenRouter(apiKey, {
+        for await (const chunk of streamOpenRouter({
           messages: [
             {
               role: "system",

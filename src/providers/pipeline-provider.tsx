@@ -28,20 +28,27 @@ const initialStatuses: Record<StageName, StageStatus> = {
   schedule: "locked",
 };
 
-const initialState: PipelineState = {
-  currentStage: "idea",
-  stageStatuses: { ...initialStatuses },
-  idea: null,
-  research: null,
-  script: null,
-  shotList: null,
-  shoot: null,
-  edit: null,
-  thumbnail: null,
-  caption: null,
-  schedule: null,
-  template: "full-video-overlay",
-};
+function makeInitialState(projectId?: string): PipelineState {
+  return {
+    currentStage: "idea",
+    stageStatuses: { ...initialStatuses },
+    idea: null,
+    research: null,
+    script: null,
+    shotList: null,
+    shoot: null,
+    edit: null,
+    thumbnail: null,
+    caption: null,
+    schedule: null,
+    template: "full-video-overlay",
+    projectId,
+  };
+}
+
+function getDraftKey(projectId?: string) {
+  return projectId ? `reelstudio-draft-${projectId}` : "reelstudio-draft";
+}
 
 function getNextStage(stage: StageName): StageName | null {
   const idx = STAGES.indexOf(stage);
@@ -151,7 +158,7 @@ function pipelineReducer(
       return { ...action.state };
 
     case "RESET":
-      return { ...initialState };
+      return makeInitialState(state.projectId);
 
     default:
       return state;
@@ -163,42 +170,53 @@ export const PipelineContext = createContext<{
   dispatch: Dispatch<PipelineAction>;
 } | null>(null);
 
-export function PipelineProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(pipelineReducer, initialState);
+interface PipelineProviderProps {
+  children: ReactNode;
+  projectId?: string;
+}
+
+export function PipelineProvider({ children, projectId }: PipelineProviderProps) {
+  const draftKey = getDraftKey(projectId);
+  const [state, dispatch] = useReducer(pipelineReducer, makeInitialState(projectId));
   const prevStateRef = useRef(state);
 
-  // Auto-save to localStorage on every state change (lightweight draft persistence)
+  // Auto-save to localStorage on every state change
   useEffect(() => {
     if (state === prevStateRef.current) return;
     prevStateRef.current = state;
     try {
       const serializable = {
         ...state,
-        shoot: state.shoot ? { clips: {} } : null, // blobs live in IndexedDB
-        edit: state.edit
-          ? { editSpec: state.edit.editSpec }
-          : null, // strip renderedVideoBlob
+        shoot: state.shoot ? { clips: {} } : null,
+        edit: state.edit ? { editSpec: state.edit.editSpec } : null,
       };
-      localStorage.setItem("reelstudio-draft", JSON.stringify(serializable));
+      localStorage.setItem(draftKey, JSON.stringify(serializable));
     } catch {
       // localStorage might be full — ignore
     }
-  }, [state]);
+  }, [state, draftKey]);
 
-  // Hydrate from localStorage on mount
+  // Hydrate from localStorage on mount (or when projectId changes)
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("reelstudio-draft");
+      const saved = localStorage.getItem(draftKey);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && parsed.currentStage) {
-          dispatch({ type: "HYDRATE", state: { ...initialState, ...parsed } });
+          dispatch({
+            type: "HYDRATE",
+            state: { ...makeInitialState(projectId), ...parsed, projectId },
+          });
+          return;
         }
       }
+      // No saved state — reset to fresh initial for this project
+      dispatch({ type: "HYDRATE", state: makeInitialState(projectId) });
     } catch {
       // Ignore corrupt data
     }
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftKey]);
 
   return (
     <PipelineContext.Provider value={{ state, dispatch }}>

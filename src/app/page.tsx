@@ -98,7 +98,7 @@ export default function LandingPage() {
             <span className="font-bold text-lg">ReelStudio</span>
           </div>
           <Button
-            onClick={() => router.push("/sign-in")}
+            onClick={() => router.push("/sign-up")}
             className="rounded-xl bg-primary hover:bg-primary/90 gap-1.5"
           >
             Get Started
@@ -129,7 +129,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
-              onClick={() => router.push("/sign-in")}
+              onClick={() => router.push("/sign-up")}
               size="lg"
               className="rounded-xl bg-primary hover:bg-primary/90 px-8 gap-2 text-base"
             >
@@ -206,7 +206,7 @@ export default function LandingPage() {
             Join creators using AI to produce professional Instagram Reels in minutes, not hours.
           </p>
           <Button
-            onClick={() => router.push("/sign-in")}
+            onClick={() => router.push("/sign-up")}
             size="lg"
             className="rounded-xl bg-primary hover:bg-primary/90 px-10 gap-2 text-base"
           >
