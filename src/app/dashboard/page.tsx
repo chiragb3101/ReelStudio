@@ -14,6 +14,8 @@ import {
   Check,
   Pencil,
   X,
+  Folder,
+  ArrowRight,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -43,6 +45,18 @@ const STAGE_LABELS: Record<string, string> = {
   thumbnail: "Thumbnail",
   caption: "Caption",
   schedule: "Schedule",
+};
+
+const STAGE_COLORS: Record<string, string> = {
+  idea: "text-violet-400",
+  research: "text-blue-400",
+  script: "text-indigo-400",
+  "shot-list": "text-cyan-400",
+  shoot: "text-teal-400",
+  edit: "text-emerald-400",
+  thumbnail: "text-amber-400",
+  caption: "text-orange-400",
+  schedule: "text-green-400",
 };
 
 function stageIndex(stage: string) {
@@ -100,7 +114,7 @@ function EditableTitle({
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={save}
-          className="flex-1 min-w-0 bg-transparent border-b border-primary text-sm font-medium outline-none"
+          className="flex-1 min-w-0 bg-transparent border-b border-primary text-sm font-semibold outline-none"
         />
         <button onClick={save} className="text-primary shrink-0"><Check className="w-3.5 h-3.5" /></button>
         <button onClick={() => { setValue(initialTitle); setEditing(false); }} className="text-muted-foreground shrink-0"><X className="w-3.5 h-3.5" /></button>
@@ -110,7 +124,7 @@ function EditableTitle({
 
   return (
     <div className="flex items-center gap-1.5 min-w-0 group/title">
-      <h3 className="font-medium text-sm truncate">{value}</h3>
+      <h3 className="font-semibold text-sm truncate">{value}</h3>
       <button onClick={startEdit} className="opacity-0 group-hover/title:opacity-100 transition-opacity text-muted-foreground hover:text-foreground shrink-0">
         <Pencil className="w-3 h-3" />
       </button>
@@ -121,16 +135,16 @@ function EditableTitle({
 function StageProgress({ stage }: { stage: string }) {
   const idx = stageIndex(stage);
   return (
-    <div className="flex items-center gap-0.5 mt-1">
+    <div className="flex items-center gap-[3px] mt-2">
       {STAGES.map((s, i) => (
         <div
           key={s}
-          className={`h-1 rounded-full flex-1 transition-colors ${
+          className={`h-1.5 rounded-full flex-1 transition-all duration-500 ${
             i < idx
-              ? "bg-primary"
+              ? "bg-gradient-to-r from-primary to-accent"
               : i === idx
-              ? "bg-primary/50"
-              : "bg-border/50"
+              ? "bg-primary/60"
+              : "bg-border/30"
           }`}
         />
       ))}
@@ -153,25 +167,34 @@ function ProjectCard({
 }) {
   const completed = isCompleted(project.stage);
   const idx = stageIndex(project.stage);
+  const stageColor = STAGE_COLORS[project.stage] || "text-primary";
 
   return (
-    <Card className="glass rounded-xl border-border/50 hover:border-primary/20 transition-colors group">
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-3 mb-3">
+    <Card className="glass rounded-2xl border-border/30 hover:border-primary/20 transition-all card-hover group overflow-hidden">
+      {/* Top gradient accent line */}
+      <div className={`h-0.5 w-full bg-gradient-to-r ${completed ? "from-green-500 to-emerald-400" : "from-primary via-accent to-primary"}`} />
+
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${completed ? "bg-green-500/10" : "bg-primary/10"}`}>
-              <Film className={`w-4 h-4 ${completed ? "text-green-400" : "text-primary"}`} />
+            <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all ${completed ? "bg-green-500/10 border border-green-500/20" : "bg-primary/10 border border-primary/15"}`}>
+              <Film className={`w-5 h-5 ${completed ? "text-green-400" : "text-primary"}`} />
             </div>
-            <EditableTitle
-              projectId={project.id}
-              userId={userId}
-              initialTitle={project.title}
-              onSave={onTitleChange}
-            />
+            <div className="min-w-0 flex-1">
+              <EditableTitle
+                projectId={project.id}
+                userId={userId}
+                initialTitle={project.title}
+                onSave={onTitleChange}
+              />
+              <span className="text-[11px] text-muted-foreground/70 block mt-0.5">
+                {formatDistanceToNow(new Date(project.updated_at), { addSuffix: true })}
+              </span>
+            </div>
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive shrink-0"
+            className="opacity-0 group-hover:opacity-100 transition-all text-muted-foreground/60 hover:text-destructive p-1 rounded-lg hover:bg-destructive/10 shrink-0"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -179,26 +202,23 @@ function ProjectCard({
 
         <StageProgress stage={project.stage} />
 
-        <div className="flex items-center justify-between mt-3">
+        <div className="flex items-center justify-between mt-4">
           <div className="flex items-center gap-2">
             {completed ? (
-              <Badge variant="outline" className="text-[10px] border-green-500/30 text-green-400">
+              <Badge variant="outline" className="text-[10px] border-green-500/30 text-green-400 bg-green-500/5">
                 <Check className="w-2.5 h-2.5 mr-1" /> Completed
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">
+              <Badge variant="outline" className={`text-[10px] border-primary/20 ${stageColor} bg-primary/5`}>
                 {STAGE_LABELS[project.stage] ?? project.stage} · {idx + 1}/9
               </Badge>
             )}
-            <span className="text-[10px] text-muted-foreground">
-              {formatDistanceToNow(new Date(project.updated_at), { addSuffix: true })}
-            </span>
           </div>
           <Button
             size="sm"
             variant={completed ? "outline" : "default"}
             onClick={onResume}
-            className="gap-1 rounded-lg h-7 text-xs"
+            className={`gap-1 rounded-xl h-7 text-xs transition-all ${!completed ? "shadow-sm shadow-primary/20 hover:shadow-md hover:shadow-primary/25" : ""}`}
           >
             {completed ? "View" : "Continue"}
             <ChevronRight className="w-3 h-3" />
@@ -318,89 +338,118 @@ export default function DashboardPage() {
   const completed = projects.filter((p) => isCompleted(p.stage));
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      {/* Subtle background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 right-[20%] w-96 h-96 rounded-full bg-primary/3 blur-3xl" />
+        <div className="absolute bottom-[20%] left-[10%] w-72 h-72 rounded-full bg-accent/3 blur-3xl" />
+      </div>
+
       {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <header className="border-b border-border/30 bg-background/70 backdrop-blur-2xl sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-              <Film className="w-4 h-4 text-primary" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center border border-primary/20">
+              <Film className="w-4.5 h-4.5 text-primary" />
             </div>
-            <h1 className="text-lg font-semibold">ReelStudio</h1>
+            <div>
+              <h1 className="text-lg font-bold tracking-tight">
+                Reel<span className="gradient-text">Studio</span>
+              </h1>
+            </div>
           </div>
           {user && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <span className="text-sm text-muted-foreground hidden sm:block">
                 {user.firstName || user.primaryEmailAddress?.emailAddress}
               </span>
               {user.imageUrl && (
-                <img src={user.imageUrl} alt="" className="w-8 h-8 rounded-full" />
+                <img src={user.imageUrl} alt="" className="w-8 h-8 rounded-full ring-2 ring-border/50" />
               )}
             </div>
           )}
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8 space-y-10">
-        {/* New Reel */}
+      <main className="max-w-6xl mx-auto px-6 py-10 space-y-12 relative z-[1]">
+        {/* New Reel CTAs */}
         <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-            Create New Reel
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex items-center gap-2 mb-5">
+            <Plus className="w-4 h-4 text-primary" />
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+              Create New Reel
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <button
               onClick={handleNewFromIdea}
               disabled={creating}
-              className="glass rounded-2xl p-6 border border-border/50 hover:border-primary/30 transition-all text-left group disabled:opacity-60"
+              className="glass rounded-2xl p-7 border border-border/30 hover:border-primary/30 transition-all text-left group disabled:opacity-60 card-hover spotlight-card relative overflow-hidden"
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                e.currentTarget.style.setProperty("--x", `${((e.clientX - rect.left) / rect.width) * 100}%`);
+                e.currentTarget.style.setProperty("--y", `${((e.clientY - rect.top) / rect.height) * 100}%`);
+              }}
             >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+              <div className="flex items-center gap-4 mb-4 relative z-[1]">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-violet-500/10 flex items-center justify-center group-hover:scale-110 transition-transform border border-primary/15">
                   {creating ? <Loader2 className="w-5 h-5 text-primary animate-spin" /> : <Sparkles className="w-5 h-5 text-primary" />}
                 </div>
                 <div>
-                  <h3 className="font-semibold">Start from Idea</h3>
-                  <p className="text-xs text-muted-foreground">Full pipeline: Idea → Script → Shoot → Edit</p>
+                  <h3 className="font-semibold text-base">Start from Idea</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Full pipeline: Idea to Published Reel</p>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground leading-relaxed relative z-[1]">
                 AI guides you through every step — from topic research to a polished, scheduled reel.
               </p>
+              <ArrowRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary absolute bottom-6 right-6 transition-all group-hover:translate-x-1" />
             </button>
 
             <button
               onClick={handleNewFromUpload}
               disabled={creating}
-              className="glass rounded-2xl p-6 border border-border/50 hover:border-primary/30 transition-all text-left group disabled:opacity-60"
+              className="glass rounded-2xl p-7 border border-border/30 hover:border-accent/30 transition-all text-left group disabled:opacity-60 card-hover spotlight-card relative overflow-hidden"
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                e.currentTarget.style.setProperty("--x", `${((e.clientX - rect.left) / rect.width) * 100}%`);
+                e.currentTarget.style.setProperty("--y", `${((e.clientY - rect.top) / rect.height) * 100}%`);
+              }}
             >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+              <div className="flex items-center gap-4 mb-4 relative z-[1]">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-cyan-500/10 flex items-center justify-center group-hover:scale-110 transition-transform border border-accent/15">
                   <Upload className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <h3 className="font-semibold">Upload Footage</h3>
-                  <p className="text-xs text-muted-foreground">Already have video? Add motion graphics & captions</p>
+                  <h3 className="font-semibold text-base">Upload Footage</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Already have video? Jump to editing</p>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground leading-relaxed relative z-[1]">
                 Upload your video, then add motion graphics, captions, and polish with AI-powered editing.
               </p>
+              <ArrowRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-accent absolute bottom-6 right-6 transition-all group-hover:translate-x-1" />
             </button>
           </div>
         </div>
 
         {/* In Progress */}
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <Loader2 className="w-7 h-7 animate-spin text-primary" />
+            <span className="text-sm text-muted-foreground">Loading projects...</span>
           </div>
         ) : (
           <>
             {drafts.length > 0 && (
               <div>
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-                  In Progress ({drafts.length})
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="flex items-center gap-2 mb-5">
+                  <Folder className="w-4 h-4 text-primary" />
+                  <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                    In Progress ({drafts.length})
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {drafts.map((project) => (
                     <ProjectCard
                       key={project.id}
@@ -417,10 +466,13 @@ export default function DashboardPage() {
 
             {completed.length > 0 && (
               <div>
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-                  Completed ({completed.length})
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="flex items-center gap-2 mb-5">
+                  <Check className="w-4 h-4 text-green-400" />
+                  <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                    Completed ({completed.length})
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {completed.map((project) => (
                     <ProjectCard
                       key={project.id}
@@ -436,12 +488,14 @@ export default function DashboardPage() {
             )}
 
             {projects.length === 0 && (
-              <Card className="glass rounded-2xl p-10 text-center border-border/50">
-                <Film className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-                <p className="text-muted-foreground font-medium">No projects yet</p>
-                <p className="text-sm text-muted-foreground/60 mt-1">Create your first reel above!</p>
-                <Button onClick={handleNewFromIdea} className="mt-4 gap-2 rounded-xl" disabled={creating}>
-                  <Plus className="w-4 h-4" /> New Reel
+              <Card className="glass rounded-2xl p-14 text-center border-border/30 border-dashed">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
+                  <Film className="w-7 h-7 text-primary/40" />
+                </div>
+                <p className="text-foreground font-semibold text-lg mb-1">No projects yet</p>
+                <p className="text-sm text-muted-foreground mb-6">Create your first reel to get started</p>
+                <Button onClick={handleNewFromIdea} className="gap-2 rounded-xl shadow-lg shadow-primary/20" disabled={creating}>
+                  <Plus className="w-4 h-4" /> Create First Reel
                 </Button>
               </Card>
             )}

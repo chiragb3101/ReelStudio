@@ -111,9 +111,9 @@ export default function ShootPage() {
     >
       <div className="space-y-6 max-w-3xl">
         {/* Progress */}
-        <div className="glass rounded-xl p-4 border border-border/50">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">
+        <div className="glass rounded-2xl p-5 border border-border/30">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-semibold">
               {filledCount} of {shots.length} shots filmed
             </span>
             <div className="flex items-center gap-3">
@@ -123,12 +123,17 @@ export default function ShootPage() {
                   {formatDuration(totalRecordedTime)} total
                 </span>
               )}
-              <span className="text-xs text-muted-foreground">
+              <Badge variant="outline" className="text-xs border-primary/20 text-primary bg-primary/5">
                 {Math.round(progress)}%
-              </span>
+              </Badge>
             </div>
           </div>
-          <Progress value={progress} className="h-2" />
+          <div className="relative h-2 rounded-full bg-border/20 overflow-hidden">
+            <div
+              className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
 
         {/* Full video upload option */}
@@ -137,7 +142,7 @@ export default function ShootPage() {
             variant="outline"
             size="sm"
             onClick={() => fullVideoInputRef.current?.click()}
-            className="gap-1.5 rounded-lg flex-1"
+            className="gap-1.5 rounded-xl flex-1 border-border/30 hover:border-primary/30 hover:bg-primary/5"
           >
             <Upload className="w-3.5 h-3.5" />
             Upload Full Video
@@ -152,7 +157,7 @@ export default function ShootPage() {
         </div>
 
         {shots.length === 0 && (
-          <div className="glass rounded-2xl p-8 text-center">
+          <div className="glass rounded-2xl p-10 text-center border-border/30">
             <p className="text-muted-foreground">
               No shot list available. Complete the Shot List stage first.
             </p>
@@ -169,18 +174,21 @@ export default function ShootPage() {
             return (
               <Card
                 key={shot.id}
-                className={`glass rounded-xl border transition-colors ${
-                  isFilled ? "border-primary/30" : "border-border/50"
+                className={`glass rounded-2xl border transition-all relative overflow-hidden ${
+                  isFilled ? "border-primary/25" : "border-border/30"
                 }`}
               >
-                <div className="p-4">
+                {/* Top accent */}
+                {isFilled && <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-accent" />}
+
+                <div className="p-5">
                   <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <div
-                        className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
+                        className={`flex items-center justify-center w-8 h-8 rounded-xl text-xs font-bold transition-all ${
                           isFilled
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground"
+                            ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                            : "bg-muted/50 text-muted-foreground border border-border/30"
                         }`}
                       >
                         {isFilled ? (
@@ -190,19 +198,19 @@ export default function ShootPage() {
                         )}
                       </div>
                       <div>
-                        <span className="font-medium text-sm">
+                        <span className="font-semibold text-sm">
                           {shot.description}
                         </span>
                         <div className="flex gap-2 mt-1">
                           <Badge
                             variant="outline"
-                            className="text-[10px] border-border/50"
+                            className="text-[10px] border-border/30"
                           >
                             {typeof shot.duration === "number" ? `${shot.duration.toFixed(1)}s` : shot.duration}
                           </Badge>
                           <Badge
                             variant="outline"
-                            className="text-[10px] border-border/50"
+                            className="text-[10px] border-border/30"
                           >
                             {shot.angle}
                           </Badge>
@@ -213,7 +221,7 @@ export default function ShootPage() {
 
                   {/* Script text preview */}
                   {shot.scriptText && (
-                    <p className="text-xs text-muted-foreground mb-3 px-2 py-1.5 rounded-lg bg-muted/30 italic">
+                    <p className="text-xs text-muted-foreground mb-3 px-3 py-2 rounded-xl bg-muted/20 border border-border/20 italic">
                       &ldquo;{shot.scriptText}&rdquo;
                     </p>
                   )}
@@ -222,7 +230,7 @@ export default function ShootPage() {
                   {clip ? (
                     <div className="flex items-center gap-3">
                       <div
-                        className="relative w-24 h-14 rounded-lg overflow-hidden bg-muted cursor-pointer group"
+                        className="relative w-24 h-14 rounded-xl overflow-hidden bg-muted cursor-pointer group"
                         onClick={() => setPopupVideo(clip.blobUrl)}
                       >
                         <video
@@ -243,14 +251,14 @@ export default function ShootPage() {
                         <div className="flex items-center gap-1.5">
                           <Badge
                             variant="outline"
-                            className="text-[10px] border-primary/30 text-primary"
+                            className="text-[10px] border-primary/20 text-primary bg-primary/5"
                           >
                             {clip.type === "recorded" ? "Recorded" : "Uploaded"}
                           </Badge>
                           {clip.duration != null && (
                             <Badge
                               variant="outline"
-                              className="text-[10px] border-border/50 text-muted-foreground gap-1"
+                              className="text-[10px] border-border/30 text-muted-foreground gap-1"
                             >
                               <Clock className="w-2.5 h-2.5" />
                               {formatDuration(clip.duration)}
@@ -259,7 +267,7 @@ export default function ShootPage() {
                           {hasTranscription && (
                             <Badge
                               variant="outline"
-                              className="text-[10px] border-green-500/30 text-green-400 gap-1"
+                              className="text-[10px] border-green-500/20 text-green-400 bg-green-500/5 gap-1"
                             >
                               <Mic className="w-2.5 h-2.5" />
                               Transcribed
@@ -271,7 +279,7 @@ export default function ShootPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => removeClip(shot.id)}
-                        className="text-muted-foreground hover:text-destructive"
+                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
@@ -281,7 +289,7 @@ export default function ShootPage() {
                       <Button
                         size="sm"
                         onClick={() => handleRecord(shot.id)}
-                        className="gap-1.5 rounded-lg bg-primary hover:bg-primary/90 flex-1"
+                        className="gap-1.5 rounded-xl bg-primary hover:bg-primary/90 flex-1 shadow-sm shadow-primary/20"
                       >
                         <Camera className="w-3.5 h-3.5" />
                         Record

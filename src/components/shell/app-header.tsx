@@ -11,15 +11,15 @@ export function AppHeader() {
   const tone = state.idea?.tone;
 
   return (
-    <header className="sticky top-0 z-50 glass border-b border-border/50">
+    <header className="sticky top-0 z-50 glass-strong border-b border-border/30">
       <div className="flex items-center justify-between h-14 px-4 lg:px-6">
         {/* Logo */}
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/20">
+          <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-primary/25 to-accent/15 border border-primary/15">
             <Film className="w-4.5 h-4.5 text-primary" />
           </div>
-          <span className="text-lg font-semibold tracking-tight">
-            Reel<span className="text-primary">Studio</span>
+          <span className="text-lg font-bold tracking-tight">
+            Reel<span className="gradient-text">Studio</span>
           </span>
         </div>
 

@@ -2,15 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import {
-  Lightbulb,
-  Search,
-  FileText,
-  ListVideo,
-  Camera,
-  Film,
-  ImageIcon,
-  MessageSquare,
-  Calendar,
   Check,
   Loader2,
   Lock,
@@ -20,21 +11,13 @@ import { STAGE_CONFIG } from "@/lib/constants";
 import { usePipeline } from "@/hooks/use-pipeline";
 import { cn } from "@/lib/utils";
 
-const STAGE_ICONS: Record<StageName, React.ElementType> = {
-  idea: Lightbulb,
-  research: Search,
-  script: FileText,
-  "shot-list": ListVideo,
-  shoot: Camera,
-  edit: Film,
-  thumbnail: ImageIcon,
-  caption: MessageSquare,
-  schedule: Calendar,
-};
 
 export function StageSidebar() {
   const { state, dispatch } = usePipeline();
   const router = useRouter();
+
+  // Find index of last completed stage for gradient line height
+  const currentIdx = STAGES.indexOf(state.currentStage);
 
   function handleNav(stage: StageName) {
     const status = state.stageStatuses[stage];
@@ -45,15 +28,18 @@ export function StageSidebar() {
   }
 
   return (
-    <aside className="hidden lg:flex flex-col w-56 border-r border-border/50 glass py-4">
+    <aside className="hidden lg:flex flex-col w-56 border-r border-border/30 glass-strong py-5">
       <nav className="flex flex-col gap-0.5 px-3 relative">
-        {/* Vertical connecting line */}
-        <div className="absolute left-[27px] top-5 bottom-5 w-px bg-border/50" />
+        {/* Vertical connecting line — gradient */}
+        <div className="absolute left-[27px] top-5 bottom-5 w-px bg-border/20" />
+        <div
+          className="absolute left-[27px] top-5 w-px sidebar-progress-line transition-all duration-500"
+          style={{ height: `${Math.max(0, (currentIdx / (STAGES.length - 1)) * 100)}%` }}
+        />
 
         {STAGES.map((stage, i) => {
           const status = state.stageStatuses[stage];
           const isCurrent = state.currentStage === stage;
-          const Icon = STAGE_ICONS[stage];
           const config = STAGE_CONFIG[stage];
 
           return (
@@ -67,9 +53,9 @@ export function StageSidebar() {
                   "bg-primary/10 text-primary font-medium",
                 !isCurrent &&
                   status !== "locked" &&
-                  "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                  "text-muted-foreground hover:text-foreground hover:bg-muted/30",
                 status === "locked" &&
-                  "text-muted-foreground/40 cursor-not-allowed"
+                  "text-muted-foreground/30 cursor-not-allowed"
               )}
             >
               {/* Stage number/icon circle */}
@@ -77,15 +63,15 @@ export function StageSidebar() {
                 className={cn(
                   "relative z-10 flex items-center justify-center w-7 h-7 rounded-full border text-xs font-semibold transition-all duration-300",
                   status === "complete" &&
-                    "bg-primary border-primary text-primary-foreground",
+                    "bg-primary border-primary text-primary-foreground shadow-sm shadow-primary/30",
                   isCurrent &&
                     status !== "complete" &&
                     "border-primary bg-primary/20 text-primary pulse-active",
                   status === "active" &&
                     !isCurrent &&
-                    "border-primary/40 bg-transparent text-primary/60",
+                    "border-primary/30 bg-transparent text-primary/50",
                   status === "locked" &&
-                    "border-muted-foreground/20 bg-muted/30 text-muted-foreground/40",
+                    "border-muted-foreground/15 bg-muted/20 text-muted-foreground/30",
                   status === "regenerating" &&
                     "border-accent bg-accent/20 text-accent animate-pulse"
                 )}
@@ -103,6 +89,11 @@ export function StageSidebar() {
 
               {/* Label */}
               <span className="truncate">{config.label}</span>
+
+              {/* Active indicator dot */}
+              {isCurrent && (
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary shadow-sm shadow-primary/50" />
+              )}
             </button>
           );
         })}

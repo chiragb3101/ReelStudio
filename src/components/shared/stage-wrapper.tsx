@@ -44,12 +44,17 @@ export function StageWrapper({
   }
 
   return (
-    <div className={cn("flex flex-col flex-1 p-4 lg:p-8 max-w-4xl mx-auto w-full", className)}>
+    <div className={cn("flex flex-col flex-1 p-4 lg:p-8 max-w-4xl mx-auto w-full animate-fade-in-up", className)}>
       {/* Stage header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{config.label}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[11px] font-semibold text-primary uppercase tracking-widest">
+              Step {stageIdx + 1} of {STAGES.length}
+            </span>
+          </div>
+          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">{config.label}</h1>
+          <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
             {config.description}
           </p>
         </div>
@@ -61,12 +66,12 @@ export function StageWrapper({
 
       {/* Next CTA */}
       {nextStage && (
-        <div className="flex justify-end mt-8 pt-6 border-t border-border/50">
+        <div className="flex justify-end mt-8 pt-6 border-t border-border/30">
           <Button
             onClick={handleNext}
             disabled={nextDisabled}
             size="lg"
-            className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6"
+            className="gap-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-7 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/25 transition-all hover:scale-[1.02] disabled:shadow-none disabled:hover:scale-100"
           >
             {nextLabel ?? `Continue to ${STAGE_CONFIG[nextStage].label}`}
             <ArrowRight className="w-4 h-4" />

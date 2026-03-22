@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { Search } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 import { StageWrapper } from "@/components/shared/stage-wrapper";
 import { StreamingText } from "@/components/shared/streaming-text";
 import { RegenerateButton } from "@/components/shared/regenerate-button";
@@ -49,14 +49,15 @@ export default function ResearchPage() {
     >
       <div className="space-y-6 max-w-3xl">
         {!hasContent && !isStreaming && (
-          <div className="glass rounded-2xl p-8 text-center space-y-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mx-auto">
-              <Search className="w-6 h-6 text-primary" />
+          <div className="glass rounded-2xl p-10 text-center space-y-5 mesh-gradient-card border border-border/30 relative overflow-hidden">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-blue-500/10 mx-auto border border-primary/15 relative z-[1]">
+              <Search className="w-7 h-7 text-primary" />
             </div>
-            <div>
-              <h3 className="font-semibold text-lg">Research your topic</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                AI will research &quot;{state.idea?.topic}&quot; and provide insights for
+            <div className="relative z-[1]">
+              <h3 className="font-semibold text-xl mb-2">Research your topic</h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+                AI will research &quot;{state.idea?.topic}&quot; and provide insights, trends, and key points for
                 your reel.
               </p>
             </div>
@@ -64,21 +65,22 @@ export default function ResearchPage() {
               onClick={handleGenerate}
               disabled={!state.idea}
               size="lg"
-              className="rounded-xl bg-primary hover:bg-primary/90"
+              className="rounded-xl bg-primary hover:bg-primary/90 gap-2 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/25 transition-all relative z-[1]"
             >
+              <Sparkles className="w-4 h-4" />
               Generate Research
             </Button>
           </div>
         )}
 
         {(hasContent || isStreaming) && (
-          <div className="glass rounded-2xl p-6 border border-border/50">
+          <div className="glass rounded-2xl p-6 lg:p-8 border border-border/30 animate-scale-in">
             <StreamingText text={displayText} isStreaming={isStreaming} />
           </div>
         )}
 
         {error && (
-          <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive">
+          <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive animate-fade-in-up">
             {error}
           </div>
         )}
