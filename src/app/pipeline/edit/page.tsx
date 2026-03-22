@@ -4,10 +4,11 @@ import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import {
   Film, Loader2, Sparkles, Type, Palette, Wand2, Download, Send,
   Mic, Upload, Scissors, ChevronRight, Trash2, AlertTriangle,
-  Play, Volume2, VolumeX, Image as ImageIcon, Paperclip,
+  Play, Volume2, VolumeX, Image as ImageIcon, Paperclip, Clapperboard,
 } from "lucide-react";
 import { StageWrapper } from "@/components/shared/stage-wrapper";
 import { useMotionGraphic } from "@/hooks/use-motion-graphic";
+import { useRenderVideo } from "@/hooks/use-render-video";
 import { useMediaStore } from "@/hooks/use-media-store";
 import { StitchedVideoPlayer } from "@/components/shared/stitched-video-player";
 import { VideoPopup } from "@/components/shared/video-popup";
@@ -236,6 +237,7 @@ export default function EditPage() {
 
   // ── Motion graphic ──
   const motionGraphic = useMotionGraphic();
+  const renderVideo = useRenderVideo();
   const [mgPrompt, setMgPrompt] = useState("");
   const mgInputRef = useRef<HTMLInputElement>(null);
   const [loadingIdx, setLoadingIdx] = useState(0);
@@ -360,6 +362,54 @@ export default function EditPage() {
       },
     });
   }
+
+  async function handleExportReel() {
+    if (timeline.length === 0 && !motionGraphic.videoBlob) return;
+
+    const editSpec = {
+      accentColor: highlightColor,
+      scenes: timeline.map((c) => ({
+        clipId: c.shotId,
+        durationFrames: Math.round((c.duration - c.trimStart - c.trimEnd) * 30),
+        transition: c.transition,
+        text: "",
+      })),
+      template: state.template ?? "full-video-overlay",
+    };
+
+    // Convert blob URLs → Blobs
+    const clipBlobs: Record<string, Blob> = {};
+    for (const clip of timeline) {
+      try {
+        const res = await fetch(clip.blobUrl);
+        clipBlobs[clip.shotId] = await res.blob();
+      } catch { /* skip clips that fail to fetch */ }
+    }
+
+    await renderVideo.render({ editSpec, clipBlobs });
+  }
+
+  // Save rendered blob into pipeline state when export completes
+  useEffect(() => {
+    if (!renderVideo.videoUrl || renderVideo.isRendering) return;
+    fetch(renderVideo.videoUrl)
+      .then((r) => r.blob())
+      .then((blob) => {
+        dispatch({
+          type: "SET_EDIT",
+          data: {
+            editSpec: state.edit?.editSpec ?? {
+              accentColor: highlightColor,
+              scenes: [],
+              template: state.template ?? "full-video-overlay",
+            },
+            renderedVideoBlob: blob,
+          },
+        });
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [renderVideo.videoUrl]);
 
   useEffect(() => {
     if (!motionGraphic.isGenerating) return;
@@ -876,6 +926,45 @@ export default function EditPage() {
             {motionGraphic.videoUrl && (
               <a href={motionGraphic.videoUrl} download="motion-graphic.mp4" className="flex items-center justify-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 py-1"><Download className="w-3 h-3" /> Download MG MP4</a>
             )}
+
+            {/* Export full reel */}
+            <div className="pt-1 border-t border-border/30">
+              {renderVideo.isRendering ? (
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>{renderVideo.progressLabel || "Rendering..."}</span>
+                  </div>
+                  <div className="w-full h-1 rounded-full bg-border/50 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-500"
+                      style={{ width: `${renderVideo.progress}%` }}
+                    />
+                  </div>
+                </div>
+              ) : renderVideo.videoUrl ? (
+                <button
+                  onClick={renderVideo.downloadVideo}
+                  className="w-full flex items-center justify-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 py-1"
+                >
+                  <Download className="w-3 h-3" /> Download Reel MP4
+                </button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full gap-1.5 rounded-lg border-primary/40 text-primary hover:bg-primary/10 text-xs"
+                  disabled={timeline.length === 0}
+                  onClick={handleExportReel}
+                >
+                  <Clapperboard className="w-3 h-3" />
+                  Export Full Reel
+                </Button>
+              )}
+              {renderVideo.error && (
+                <p className="text-[10px] text-destructive mt-1 leading-tight">{renderVideo.error}</p>
+              )}
+            </div>
           </div>
         </div>
       </div>

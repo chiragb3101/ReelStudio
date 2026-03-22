@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Calendar,
   Copy,
@@ -106,9 +106,43 @@ export default function SchedulePage() {
     );
   }
 
+  const [videoObjectUrl, setVideoObjectUrl] = useState<string | null>(null);
+
+  // Build an object URL for the rendered blob once
+  useEffect(() => {
+    const blob = state.edit?.renderedVideoBlob;
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    setVideoObjectUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [state.edit?.renderedVideoBlob]);
+
   return (
     <StageWrapper stage="schedule">
       <div className="space-y-6 max-w-2xl">
+        {/* Final video preview */}
+        {videoObjectUrl && (
+          <Card className="glass rounded-2xl overflow-hidden border-border/50">
+            <video
+              src={videoObjectUrl}
+              controls
+              playsInline
+              className="w-full max-h-[480px] object-contain bg-black"
+            />
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Final Reel</span>
+              <a
+                href={videoObjectUrl}
+                download="reel.mp4"
+                className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Download MP4
+              </a>
+            </div>
+          </Card>
+        )}
+
         {/* Caption preview */}
         <Card className="glass rounded-2xl p-6 border-border/50">
           <div className="flex items-center justify-between mb-3">
