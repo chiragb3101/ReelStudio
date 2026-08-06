@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { MessageSquare, Hash } from "lucide-react";
+import { MessageSquare, Hash, Sparkles } from "lucide-react";
 import { StageWrapper } from "@/components/shared/stage-wrapper";
 import { JsonStreamingIndicator } from "@/components/shared/json-streaming-indicator";
 import { RegenerateButton } from "@/components/shared/regenerate-button";
@@ -93,13 +93,14 @@ export default function CaptionPage() {
     >
       <div className="space-y-6 max-w-3xl">
         {showEmpty && (
-          <div className="glass rounded-2xl p-8 text-center space-y-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mx-auto">
-              <MessageSquare className="w-6 h-6 text-primary" />
+          <div className="glass rounded-2xl p-10 text-center space-y-5 mesh-gradient-card border border-border/30 relative overflow-hidden">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500/20 to-rose-500/10 mx-auto border border-orange-500/15 relative z-[1]">
+              <MessageSquare className="w-7 h-7 text-orange-400" />
             </div>
-            <div>
-              <h3 className="font-semibold text-lg">Write your caption</h3>
-              <p className="text-sm text-muted-foreground mt-1">
+            <div className="relative z-[1]">
+              <h3 className="font-semibold text-xl mb-2">Write your caption</h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
                 AI will craft an engaging caption with hashtags for your reel.
               </p>
             </div>
@@ -107,8 +108,9 @@ export default function CaptionPage() {
               onClick={handleGenerate}
               disabled={!state.script}
               size="lg"
-              className="rounded-xl bg-primary hover:bg-primary/90"
+              className="rounded-xl bg-primary hover:bg-primary/90 gap-2 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/25 transition-all relative z-[1]"
             >
+              <Sparkles className="w-4 h-4" />
               Generate Caption
             </Button>
           </div>
@@ -119,14 +121,15 @@ export default function CaptionPage() {
         )}
 
         {showCards && captionData && (
-          <div className="space-y-4">
-            <Card className="glass rounded-2xl p-6 border-border/50">
-              <div className="flex items-center gap-2 mb-3">
+          <div className="space-y-4 animate-fade-in-up">
+            <Card className="glass rounded-2xl p-6 border-border/30 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-primary via-accent to-primary" />
+              <div className="flex items-center gap-2 mb-4">
                 <MessageSquare className="w-4 h-4 text-primary" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+                <span className="text-xs font-semibold uppercase tracking-widest text-primary">
                   Caption
                 </span>
-                <span className="text-xs text-muted-foreground ml-auto">
+                <span className="text-[10px] text-muted-foreground/60 ml-auto">
                   Click to edit
                 </span>
               </div>
@@ -134,23 +137,23 @@ export default function CaptionPage() {
                 value={displayCaption}
                 onChange={(e) => setEditedCaption(e.target.value)}
                 rows={8}
-                className="bg-transparent border-0 p-0 text-foreground leading-relaxed resize-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="bg-transparent border-0 p-0 text-foreground leading-relaxed resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base"
               />
             </Card>
 
-            <Card className="glass rounded-2xl p-6 border-border/50">
-              <div className="flex items-center gap-2 mb-3">
+            <Card className="glass rounded-2xl p-6 border-border/30">
+              <div className="flex items-center gap-2 mb-4">
                 <Hash className="w-4 h-4 text-accent" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-accent">
+                <span className="text-xs font-semibold uppercase tracking-widest text-accent">
                   Hashtags
                 </span>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {captionData.hashtags.map((tag: string) => (
                   <Badge
                     key={tag}
                     variant="outline"
-                    className="text-xs border-accent/30 text-accent"
+                    className="text-xs border-accent/20 text-accent bg-accent/5 px-3 py-1"
                   >
                     #{tag}
                   </Badge>
@@ -161,7 +164,7 @@ export default function CaptionPage() {
         )}
 
         {error && (
-          <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive">
+          <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive animate-fade-in-up">
             {error}
           </div>
         )}

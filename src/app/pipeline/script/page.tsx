@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { FileText, Clock, Hash } from "lucide-react";
+import { FileText, Clock, Hash, Sparkles } from "lucide-react";
 import { StageWrapper } from "@/components/shared/stage-wrapper";
 import { JsonStreamingIndicator } from "@/components/shared/json-streaming-indicator";
 import { RegenerateButton } from "@/components/shared/regenerate-button";
@@ -104,13 +104,14 @@ export default function ScriptPage() {
     >
       <div className="space-y-6 max-w-3xl">
         {showEmpty && (
-          <div className="glass rounded-2xl p-8 text-center space-y-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mx-auto">
-              <FileText className="w-6 h-6 text-primary" />
+          <div className="glass rounded-2xl p-10 text-center space-y-5 mesh-gradient-card border border-border/30 relative overflow-hidden">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-indigo-500/10 mx-auto border border-primary/15 relative z-[1]">
+              <FileText className="w-7 h-7 text-primary" />
             </div>
-            <div>
-              <h3 className="font-semibold text-lg">Generate your script</h3>
-              <p className="text-sm text-muted-foreground mt-1">
+            <div className="relative z-[1]">
+              <h3 className="font-semibold text-xl mb-2">Generate your script</h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
                 AI will write a scroll-stopping script based on your research.
               </p>
             </div>
@@ -118,8 +119,9 @@ export default function ScriptPage() {
               onClick={handleGenerate}
               disabled={!state.idea}
               size="lg"
-              className="rounded-xl bg-primary hover:bg-primary/90"
+              className="rounded-xl bg-primary hover:bg-primary/90 gap-2 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/25 transition-all relative z-[1]"
             >
+              <Sparkles className="w-4 h-4" />
               Generate Script
             </Button>
           </div>
@@ -130,19 +132,19 @@ export default function ScriptPage() {
         )}
 
         {showCards && script && (
-          <div className="space-y-4">
+          <div className="space-y-4 animate-fade-in-up">
             {/* Stats bar */}
             <div className="flex items-center gap-3 px-1">
-              <Badge variant="outline" className="text-xs gap-1 border-primary/30 text-primary">
+              <Badge variant="outline" className="text-xs gap-1.5 border-primary/20 text-primary bg-primary/5">
                 <Hash className="w-3 h-3" />
                 {totalWords} words
               </Badge>
-              <Badge variant="outline" className="text-xs gap-1 border-primary/30 text-primary">
+              <Badge variant="outline" className="text-xs gap-1.5 border-primary/20 text-primary bg-primary/5">
                 <Clock className="w-3 h-3" />
                 ~{totalSeconds.toFixed(0)}s
               </Badge>
               {script.segments && (
-                <Badge variant="outline" className="text-xs gap-1 border-border/50 text-muted-foreground">
+                <Badge variant="outline" className="text-xs gap-1 border-border/40 text-muted-foreground">
                   {script.segments.length} segments
                 </Badge>
               )}
@@ -155,43 +157,49 @@ export default function ScriptPage() {
                   const isHook = i === 0;
                   const isCta = i === script.segments!.length - 1;
                   const labelColor = isHook
-                    ? "text-red-400"
+                    ? "text-rose-400"
                     : isCta
                       ? "text-cyan-400"
                       : "text-primary";
                   const dotColor = isHook
-                    ? "bg-red-400"
+                    ? "bg-rose-400"
                     : isCta
                       ? "bg-cyan-400"
                       : "bg-primary";
                   const label = isHook ? "Hook" : isCta ? "Call to Action" : `Segment ${i + 1}`;
                   const borderClass = isHook
-                    ? "border-red-400/20"
+                    ? "border-rose-400/15"
                     : isCta
-                      ? "border-cyan-400/20"
-                      : "border-border/50";
+                      ? "border-cyan-400/15"
+                      : "border-border/30";
+                  const accentGradient = isHook
+                    ? "from-rose-500/10 to-transparent"
+                    : isCta
+                      ? "from-cyan-500/10 to-transparent"
+                      : "from-primary/5 to-transparent";
 
                   return (
-                    <Card key={seg.shotId} className={`glass rounded-2xl p-6 ${borderClass}`}>
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${dotColor}`} />
+                    <Card key={seg.shotId} className={`glass rounded-2xl p-6 ${borderClass} relative overflow-hidden`}>
+                      <div className={`absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b ${accentGradient} pointer-events-none`} />
+                      <div className="flex items-center justify-between mb-3 relative z-[1]">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-2.5 h-2.5 rounded-full ${dotColor} shadow-sm`} />
                           <span className={`text-xs font-semibold uppercase tracking-wider ${labelColor}`}>
                             {label}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-[10px] border-border/50 text-muted-foreground gap-1">
+                          <Badge variant="outline" className="text-[10px] border-border/30 text-muted-foreground gap-1">
                             <Hash className="w-2.5 h-2.5" />
                             {seg.wordCount}w
                           </Badge>
-                          <Badge variant="outline" className="text-[10px] border-border/50 text-muted-foreground gap-1">
+                          <Badge variant="outline" className="text-[10px] border-border/30 text-muted-foreground gap-1">
                             <Clock className="w-2.5 h-2.5" />
                             {seg.estimatedSeconds.toFixed(1)}s
                           </Badge>
                         </div>
                       </div>
-                      <p className="text-lg font-medium leading-relaxed">
+                      <p className="text-lg font-medium leading-relaxed relative z-[1]">
                         {renderWithEmphasis(seg.text, seg.emphasisWords)}
                       </p>
                     </Card>
@@ -201,19 +209,20 @@ export default function ScriptPage() {
             ) : (
               /* Legacy 3-card view */
               <div className="space-y-4">
-                <Card className="glass rounded-2xl p-6 border-primary/20">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-2 h-2 rounded-full bg-red-400" />
-                    <span className="text-xs font-semibold uppercase tracking-wider text-red-400">
+                <Card className="glass rounded-2xl p-6 border-rose-400/15 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-rose-500/8 to-transparent pointer-events-none" />
+                  <div className="flex items-center gap-2.5 mb-3 relative z-[1]">
+                    <div className="w-2.5 h-2.5 rounded-full bg-rose-400 shadow-sm" />
+                    <span className="text-xs font-semibold uppercase tracking-wider text-rose-400">
                       Hook
                     </span>
                   </div>
-                  <p className="text-lg font-medium leading-relaxed">{script.hook}</p>
+                  <p className="text-lg font-medium leading-relaxed relative z-[1]">{script.hook}</p>
                 </Card>
 
-                <Card className="glass rounded-2xl p-6 border-border/50">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-2 h-2 rounded-full bg-primary" />
+                <Card className="glass rounded-2xl p-6 border-border/30">
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-sm" />
                     <span className="text-xs font-semibold uppercase tracking-wider text-primary">
                       Body
                     </span>
@@ -223,14 +232,15 @@ export default function ScriptPage() {
                   </p>
                 </Card>
 
-                <Card className="glass rounded-2xl p-6 border-accent/20">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-2 h-2 rounded-full bg-accent" />
+                <Card className="glass rounded-2xl p-6 border-cyan-400/15 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-cyan-500/8 to-transparent pointer-events-none" />
+                  <div className="flex items-center gap-2.5 mb-3 relative z-[1]">
+                    <div className="w-2.5 h-2.5 rounded-full bg-accent shadow-sm" />
                     <span className="text-xs font-semibold uppercase tracking-wider text-accent">
                       Call to Action
                     </span>
                   </div>
-                  <p className="font-medium">{script.cta}</p>
+                  <p className="font-medium relative z-[1]">{script.cta}</p>
                 </Card>
               </div>
             )}
@@ -238,7 +248,7 @@ export default function ScriptPage() {
         )}
 
         {error && (
-          <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive">
+          <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive animate-fade-in-up">
             {error}
           </div>
         )}

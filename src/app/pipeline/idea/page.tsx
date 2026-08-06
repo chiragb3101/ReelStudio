@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Lightbulb } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -35,22 +35,25 @@ export default function IdeaPage() {
     >
       <div className="space-y-8 max-w-2xl">
         {/* Hero prompt */}
-        <div className="glass rounded-2xl p-6 border border-primary/10">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-5 h-5 text-primary" />
-            <span className="text-sm font-medium text-primary">
+        <div className="glass rounded-2xl p-6 border border-primary/15 mesh-gradient-card relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex items-center gap-3 mb-3 relative z-[1]">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-violet-500/10 flex items-center justify-center border border-primary/15">
+              <Sparkles className="w-5 h-5 text-primary" />
+            </div>
+            <span className="text-sm font-semibold text-foreground">
               Start with an idea
             </span>
           </div>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-sm leading-relaxed relative z-[1]">
             Tell us what your reel is about. The more specific, the better your
             AI-generated content will be.
           </p>
         </div>
 
         {/* Topic */}
-        <div className="space-y-2">
-          <Label htmlFor="topic" className="text-sm font-medium">
+        <div className="space-y-2.5">
+          <Label htmlFor="topic" className="text-sm font-semibold">
             What&apos;s your reel about? <span className="text-destructive">*</span>
           </Label>
           <Input
@@ -58,15 +61,15 @@ export default function IdeaPage() {
             placeholder="e.g., 5 morning habits that changed my life"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            className="h-12 rounded-xl bg-card border-border/50 text-base placeholder:text-muted-foreground/50"
+            className="h-12 rounded-xl bg-card/60 border-border/40 text-base placeholder:text-muted-foreground/40 focus:border-primary/40 focus:ring-primary/20 transition-all"
           />
         </div>
 
         {/* POV */}
-        <div className="space-y-2">
-          <Label htmlFor="pov" className="text-sm font-medium">
+        <div className="space-y-2.5">
+          <Label htmlFor="pov" className="text-sm font-semibold">
             Your unique angle or POV{" "}
-            <span className="text-muted-foreground font-normal">(optional)</span>
+            <span className="text-muted-foreground font-normal text-xs">(optional)</span>
           </Label>
           <Textarea
             id="pov"
@@ -74,13 +77,13 @@ export default function IdeaPage() {
             value={pov}
             onChange={(e) => setPov(e.target.value)}
             rows={3}
-            className="rounded-xl bg-card border-border/50 text-base placeholder:text-muted-foreground/50 resize-none"
+            className="rounded-xl bg-card/60 border-border/40 text-base placeholder:text-muted-foreground/40 resize-none focus:border-primary/40 focus:ring-primary/20 transition-all"
           />
         </div>
 
         {/* Tone */}
         <div className="space-y-3">
-          <Label className="text-sm font-medium">
+          <Label className="text-sm font-semibold">
             Choose your tone <span className="text-destructive">*</span>
           </Label>
           <ToneSelector value={tone} onChange={setTone} />

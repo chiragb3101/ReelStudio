@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { ListVideo, Camera, Clock, Clapperboard, FileText, Hash } from "lucide-react";
+import { ListVideo, Camera, Clock, Clapperboard, FileText, Hash, Sparkles } from "lucide-react";
 import { StageWrapper } from "@/components/shared/stage-wrapper";
 import { JsonStreamingIndicator } from "@/components/shared/json-streaming-indicator";
 import { RegenerateButton } from "@/components/shared/regenerate-button";
@@ -100,13 +100,14 @@ export default function ShotListPage() {
     >
       <div className="space-y-6 max-w-3xl">
         {showEmpty && (
-          <div className="glass rounded-2xl p-8 text-center space-y-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mx-auto">
-              <ListVideo className="w-6 h-6 text-primary" />
+          <div className="glass rounded-2xl p-10 text-center space-y-5 mesh-gradient-card border border-border/30 relative overflow-hidden">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-teal-500/10 mx-auto border border-cyan-500/15 relative z-[1]">
+              <ListVideo className="w-7 h-7 text-cyan-400" />
             </div>
-            <div>
-              <h3 className="font-semibold text-lg">Plan your shots</h3>
-              <p className="text-sm text-muted-foreground mt-1">
+            <div className="relative z-[1]">
+              <h3 className="font-semibold text-xl mb-2">Plan your shots</h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
                 AI will create a detailed shot-by-shot plan for your reel.
               </p>
             </div>
@@ -114,8 +115,9 @@ export default function ShotListPage() {
               onClick={handleGenerate}
               disabled={!state.script}
               size="lg"
-              className="rounded-xl bg-primary hover:bg-primary/90"
+              className="rounded-xl bg-primary hover:bg-primary/90 gap-2 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/25 transition-all relative z-[1]"
             >
+              <Sparkles className="w-4 h-4" />
               Generate Shot List
             </Button>
           </div>
@@ -126,14 +128,14 @@ export default function ShotListPage() {
         )}
 
         {showCards && shots && (
-          <div className="space-y-3">
+          <div className="space-y-3 animate-fade-in-up">
             {/* Total duration bar */}
             <div className="flex items-center gap-2 px-1">
-              <Badge variant="outline" className="text-xs gap-1 border-primary/30 text-primary">
+              <Badge variant="outline" className="text-xs gap-1.5 border-primary/20 text-primary bg-primary/5">
                 <Clock className="w-3 h-3" />
                 {totalDuration.toFixed(1)}s total
               </Badge>
-              <Badge variant="outline" className="text-xs gap-1 border-border/50 text-muted-foreground">
+              <Badge variant="outline" className="text-xs gap-1 border-border/40 text-muted-foreground">
                 {shots.length} shots
               </Badge>
             </div>
@@ -141,27 +143,28 @@ export default function ShotListPage() {
             {shots.map((shot: ShotItem, i: number) => (
               <Card
                 key={shot.id}
-                className="glass rounded-xl p-5 border-border/50 hover:border-primary/20 transition-colors"
+                className="glass rounded-2xl p-5 border-border/30 hover:border-primary/20 transition-all card-hover relative overflow-hidden group"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/20 text-primary text-xs font-bold">
+                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary/40 to-transparent rounded-l-2xl" />
+                <div className="flex items-start justify-between mb-3 pl-2">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-primary/10 text-primary text-xs font-bold border border-primary/15">
                       {i + 1}
                     </div>
-                    <span className="font-medium">{shot.description}</span>
+                    <span className="font-semibold">{shot.description}</span>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2 mb-3">
+                <div className="flex flex-wrap gap-2 mb-3 pl-2">
                   <Badge
                     variant="outline"
-                    className="text-xs gap-1 border-border/50"
+                    className="text-xs gap-1 border-border/30"
                   >
                     <Clock className="w-3 h-3" />
                     {typeof shot.duration === "number" ? `${shot.duration.toFixed(1)}s` : shot.duration}
                   </Badge>
                   <Badge
                     variant="outline"
-                    className="text-xs gap-1 border-border/50"
+                    className="text-xs gap-1 border-border/30"
                   >
                     <Camera className="w-3 h-3" />
                     {shot.angle}
@@ -169,7 +172,7 @@ export default function ShotListPage() {
                   {shot.wordCount && (
                     <Badge
                       variant="outline"
-                      className="text-xs gap-1 border-border/50"
+                      className="text-xs gap-1 border-border/30"
                     >
                       <Hash className="w-3 h-3" />
                       {shot.wordCount}w
@@ -179,7 +182,7 @@ export default function ShotListPage() {
 
                 {/* Script text for this shot */}
                 {shot.scriptText && (
-                  <div className="mb-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
+                  <div className="mb-2 px-3 py-2.5 rounded-xl bg-primary/5 border border-primary/10 ml-2">
                     <div className="flex items-center gap-1.5 mb-1">
                       <FileText className="w-3 h-3 text-primary/60" />
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-primary/60">
@@ -193,7 +196,7 @@ export default function ShotListPage() {
                 )}
 
                 {shot.notes && (
-                  <p className="text-sm text-muted-foreground flex items-start gap-1.5">
+                  <p className="text-sm text-muted-foreground flex items-start gap-1.5 pl-2">
                     <Clapperboard className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                     {shot.notes}
                   </p>
@@ -204,7 +207,7 @@ export default function ShotListPage() {
         )}
 
         {error && (
-          <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive">
+          <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive animate-fade-in-up">
             {error}
           </div>
         )}
